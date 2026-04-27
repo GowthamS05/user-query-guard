@@ -14,6 +14,7 @@ SAFE_RESPONSE_BY_CATEGORY: dict[GuardCategory, str] = {
     "system_prompt_extraction": "I can't help reveal system prompts or hidden instructions.",
     "xss": "I can't help create or execute malicious scripts.",
     "sql_injection": "I can't help craft SQL injection or database abuse payloads.",
+    "profanity": "Please rephrase the request without abusive or profane language.",
     "sexual_content": "I can't help with explicit sexual requests.",
     "hate": "I can't help produce hateful or dehumanizing content.",
     "violence": "I can't help with violent harmful instructions.",
@@ -42,26 +43,70 @@ def _compile(patterns: Iterable[str]) -> tuple[re.Pattern[str], ...]:
     return tuple(re.compile(pattern, re.IGNORECASE | re.DOTALL) for pattern in patterns)
 
 
+def _keyword_patterns(keywords: Iterable[str]) -> tuple[re.Pattern[str], ...]:
+    """Compile literal keywords with word boundaries where they are safe to use."""
+
+    patterns: list[str] = []
+    for keyword in keywords:
+        escaped = re.escape(keyword.strip())
+        if re.fullmatch(r"[\w\s-]+", keyword):
+            escaped = escaped.replace(r"\ ", r"\s+").replace(r"\-", r"[-\s]+")
+            patterns.append(rf"(?<!\w){escaped}(?!\w)")
+        else:
+            patterns.append(escaped)
+    return _compile(patterns)
+
+
 BLOCK_RULES: tuple[Rule, ...] = (
     Rule(
         category="system_prompt_extraction",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "system prompt",
+                    "developer message",
+                    "hidden instructions",
+                    "initial instructions",
+                    "internal prompt",
+                    "private instructions",
+                ]
+            ),
+            *_compile(
+                [
                 r"\b(sys(?:tem)?|syst[e]?m|syatem|developer|hidden)\s+(prompt|instruction|message)s?\b",
                 (
                     r"\b(reveal|show|print|display|dump|leak|expose)\b.{0,60}"
                     r"\b(prompt|instruction|sys(?:tem)? message|syatem message)s?\b"
                 ),
                 r"\bwhat (are|were) your (initial|sys(?:tem)?|syatem|hidden) instructions\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.95,
         reason="The query asks to reveal hidden system instructions.",
     ),
     Rule(
         category="prompt_injection",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "prompt injection",
+                    "ignore previous instructions",
+                    "ignore prior instructions",
+                    "disregard previous instructions",
+                    "override instructions",
+                    "override safety",
+                    "reveal secrets",
+                    "dump secrets",
+                    "environment variables",
+                    "private key",
+                    "ssh key",
+                    "access token",
+                    "secret key",
+                ]
+            ),
+            *_compile(
+                [
                 r"\bignore (all )?(previous|prior|above|earlier) (instructions|rules|messages)\b",
                 (
                     r"\bdisregard (all )?(previous|prior|above|earlier) "
@@ -75,7 +120,8 @@ BLOCK_RULES: tuple[Rule, ...] = (
                 ),
                 r"\bexfiltrate\b.{0,80}\b(data|secret|credential|api key|token|file)\b",
                 r"\bsteal\b.{0,80}\b(data|secret|credential|api key|token|file)\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.9,
         reason="The query attempts to override instructions or abuse connected tools.",
@@ -166,14 +212,26 @@ BLOCK_RULES: tuple[Rule, ...] = (
     ),
     Rule(
         category="jailbreak",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "jailbreak",
+                    "do anything now",
+                    "dan mode",
+                    "developer mode",
+                    "unrestricted mode",
+                    "bypass safety",
+                    "bypass policy",
+                    "no safety restrictions",
+                ]
+            ),
+            *_compile(
+                [
                 r"\b(DAN|do anything now)\b",
-                r"\bjailbreak\b",
-                r"\bdeveloper mode\b",
                 r"\bpretend you are unrestricted\b",
                 r"\bno (safety|ethical|policy) restrictions\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.9,
         reason="The query appears to be a jailbreak attempt.",
@@ -193,8 +251,20 @@ BLOCK_RULES: tuple[Rule, ...] = (
     ),
     Rule(
         category="llm_poisoning",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "indirect prompt injection",
+                    "malicious context injection",
+                    "malicious rag injection",
+                    "poison rag",
+                    "poison retrieval",
+                    "poison memory",
+                    "poison embeddings",
+                ]
+            ),
+            *_compile(
+                [
                 r"\bpoison\b.{0,80}\b(model|llm|rag|retrieval|embedding|agent|memory)\b",
                 (
                     r"\bwhen (an|the) (ai|assistant|agent|model) reads this\b.{0,120}"
@@ -206,82 +276,176 @@ BLOCK_RULES: tuple[Rule, ...] = (
                     r"\b(ignore|leak|exfiltrate|override)\b"
                 ),
                 r"\bmalicious (document|context|retrieval|rag) (injection|payload)\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.9,
         reason="The query attempts to poison model, agent, or retrieval behavior.",
     ),
     Rule(
         category="xss",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "<script",
+                    "javascript:",
+                    "document.cookie",
+                    "onerror=",
+                    "onload=",
+                    "alert(",
+                ]
+            ),
+            *_compile(
+                [
                 r"<\s*script\b[^>]*>.*?<\s*/\s*script\s*>",
                 r"\bon\w+\s*=\s*['\"][^'\"]*['\"]",
-                r"\bjavascript\s*:",
                 r"<\s*img\b[^>]*\bonerror\s*=",
-            ]
+                ]
+            ),
         ),
         risk_score=0.92,
         reason="The query contains a script-like injection payload.",
     ),
     Rule(
         category="sql_injection",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "union select",
+                    "drop table",
+                    "sql injection",
+                    "sqlmap",
+                    "xp_cmdshell",
+                    "' or 1=1",
+                    "\" or 1=1",
+                ]
+            ),
+            *_compile(
+                [
                 r"('|%27)\s*(or|and)\s*('|%27)?\s*\d+\s*=\s*\d+",
-                r"\bunion\s+select\b",
-                r"\bdrop\s+table\b",
                 r";\s*(drop|delete|truncate|alter)\s+(table|database)\b",
                 r"--\s*$",
-            ]
+                ]
+            ),
         ),
         risk_score=0.9,
         reason="The query contains SQL injection style input.",
     ),
     Rule(
         category="sexual_content",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "hardcore porn",
+                    "explicit sex",
+                    "graphic sex",
+                    "erotic roleplay",
+                    "sexual content involving minors",
+                ]
+            ),
+            *_compile(
+                [
                 r"\b(porn|pornographic|explicit sex|hardcore|erotic roleplay)\b",
                 r"\b(write|generate|describe)\b.{0,50}\b(explicit|graphic)\b.{0,50}\b(sex|sexual)\b",
-                r"\bsexual content involving minors\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.88,
         reason="The query requests explicit sexual content.",
     ),
     Rule(
+        category="profanity",
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "fuck",
+                    "fucks",
+                    "fucked",
+                    "fucker",
+                    "fucking",
+                    "fuk",
+                    "fck",
+                ]
+            ),
+            *_compile(
+                [
+                    r"(?<!\w)f[\W_]*u[\W_]*c[\W_]*k(?:e[rd]?|ing|s)?(?!\w)",
+                    r"(?<!\w)f[\W_]*u[\W_]*k(?:e[rd]?|ing|s)?(?!\w)",
+                    r"(?<!\w)f[\W_]*c[\W_]*k(?:e[rd]?|ing|s)?(?!\w)",
+                    r"(?<!\w)f[\W_]{2,}k?(?!\w)",
+                ]
+            ),
+        ),
+        risk_score=0.7,
+        reason="The query contains abusive or profane language.",
+    ),
+    Rule(
         category="hate",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "hate speech",
+                    "racial slur",
+                    "ethnic cleansing",
+                    "dehumanizing propaganda",
+                ]
+            ),
+            *_compile(
+                [
                 r"\b(genocide|exterminate|eliminate)\b.{0,60}\b(race|religion|ethnic|minority|immigrants)\b",
                 r"\bwrite\b.{0,50}\b(hate speech|racist slur|dehumanizing)\b",
                 r"\bwhy (are|is)\b.{0,80}\b(inferior|subhuman)\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.86,
         reason="The query appears to request hateful harmful content.",
     ),
     Rule(
         category="violence",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "bomb making",
+                    "explosive recipe",
+                    "homemade explosive",
+                    "molotov cocktail",
+                    "kill someone",
+                    "assassination plan",
+                    "make a weapon",
+                ]
+            ),
+            *_compile(
+                [
                 r"\bhow to\b.{0,80}\b(kill|murder|assassinate|maim)\b",
                 r"\bmake\b.{0,40}\b(bomb|explosive|molotov|weapon)\b",
                 r"\bthreaten\b.{0,60}\b(with violence|to kill|to hurt)\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.9,
         reason="The query requests violent harmful content.",
     ),
     Rule(
         category="self_harm",
-        patterns=_compile(
-            [
+        patterns=(
+            *_keyword_patterns(
+                [
+                    "kill myself",
+                    "end my life",
+                    "commit suicide",
+                    "suicide method",
+                    "self harm instructions",
+                    "best way to die",
+                ]
+            ),
+            *_compile(
+                [
                 r"\bhow (do|can) i\b.{0,60}\b(kill myself|end my life|commit suicide)\b",
                 r"\bencourage\b.{0,60}\b(suicide|self-harm|self harm)\b",
                 r"\bbest way to\b.{0,60}\b(self-harm|self harm|die by suicide)\b",
-            ]
+                ]
+            ),
         ),
         risk_score=0.95,
         reason="The query asks for self-harm encouragement or instructions.",

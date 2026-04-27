@@ -11,6 +11,7 @@ GuardCategory = Literal[
     "system_prompt_extraction",
     "xss",
     "sql_injection",
+    "profanity",
     "sexual_content",
     "hate",
     "violence",

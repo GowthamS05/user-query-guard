@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: user-query-guard
-    runtime: python
-    buildCommand: uv sync --frozen --no-dev
-    startCommand: uv run user-query-guard --transport streamable-http
-    envVars:
-      - key: HOST
-        value: 0.0.0.0
