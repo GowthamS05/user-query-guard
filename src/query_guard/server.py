@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from typing import Literal
 
@@ -13,7 +14,10 @@ from query_guard.schema import GuardRequest
 
 TransportName = Literal["stdio", "sse", "streamable-http"]
 
-mcp = FastMCP("User Query Guard", host="127.0.0.1", port=8000)
+HOST = os.getenv("HOST", "127.0.0.1")
+PORT = int(os.getenv("PORT", "8000"))
+
+mcp = FastMCP("User Query Guard", host=HOST, port=PORT)
 guard = QueryGuard()
 
 
@@ -45,7 +49,7 @@ def main() -> None:
         print("User Query Guard running on stdio.", file=sys.stderr)
     else:
         print(
-            f"User Query Guard running with {transport} transport at http://127.0.0.1:8000/mcp",
+            f"User Query Guard running with {transport} transport at http://{HOST}:{PORT}/mcp",
             file=sys.stderr,
         )
 
