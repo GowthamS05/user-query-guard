@@ -189,8 +189,8 @@ BLOCK_RULES: tuple[Rule, ...] = (
             ]
         ),
         risk_score=0.9,
-        reason="The query attempts to override instructions, extract knowledge, or abuse output formatting.",
-),
+        reason="The query attempts to override instructions, extract knowledge.",
+    ),
     Rule(
         category="llm_poisoning",
         patterns=_compile(
@@ -287,6 +287,7 @@ BLOCK_RULES: tuple[Rule, ...] = (
         reason="The query asks for self-harm encouragement or instructions.",
     ),
 )
+
 
 def validate_with_rules(user_query: str) -> RuleDecision:
     """Validate a query locally with lightweight deterministic block rules."""
