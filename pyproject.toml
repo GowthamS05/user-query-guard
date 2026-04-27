@@ -1,0 +1,53 @@
+[project]
+name = "user-query-guard"
+version = "0.1.0"
+description = "A rules-only safety gateway for validating user queries before they reach LLMs, agents, tools, or RAG pipelines."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "User Query Guard Contributors" }]
+keywords = ["mcp", "model-context-protocol", "safety", "guardrails", "prompt-injection"]
+dependencies = [
+    "mcp>=1.0.0",
+    "pydantic>=2.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/GowthamS05/user-query-guard"
+Repository = "https://github.com/GowthamS05/user-query-guard"
+Issues = "https://github.com/GowthamS05/user-query-guard/issues"
+
+[project.scripts]
+user-query-guard = "query_guard.server:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.10.0",
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.5.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/query_guard"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["query_guard"]
