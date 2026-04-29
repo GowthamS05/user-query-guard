@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+import ssl
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from typing import Any, cast
+
+import certifi
 
 from query_guard.rules import SAFE_RESPONSE_BY_CATEGORY
 from query_guard.schema import GuardCategory, GuardResponse, LLMProvider
@@ -131,8 +134,9 @@ class LLMValidator:
     ) -> dict[str, Any]:
         body = json.dumps(payload).encode("utf-8")
         request = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
         try:
-            with urllib.request.urlopen(request, timeout=30) as response:
+            with urllib.request.urlopen(request, timeout=30, context=ssl_context) as response:
                 return cast(dict[str, Any], json.loads(response.read().decode("utf-8")))
         except urllib.error.HTTPError as exc:
             error_body = exc.read().decode("utf-8", errors="replace")[:500]
@@ -189,3 +193,4 @@ class LLMValidator:
             reason=f"LLM validation: {reason}",
             safe_response=safe_response,
         )
+ 
