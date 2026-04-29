@@ -2,12 +2,14 @@
 
 A lightweight Python safety gateway for validating user queries before they reach LLMs, agents, tools, or RAG pipelines.
 
-User Query Guard provides a rules-only validation engine and a Model Context Protocol server. It is designed for projects that need fast, deterministic checks for common unsafe query patterns such as prompt injection, jailbreak attempts, system prompt extraction, XSS payloads, SQL injection strings, harmful requests, and LLM poisoning attempts.
+User Query Guard provides a local validation engine, optional LLM verification, and a Model Context Protocol server. It is designed for projects that need fast checks for common unsafe query patterns such as prompt injection, jailbreak attempts, system prompt extraction, XSS payloads, SQL injection strings, harmful requests, and LLM poisoning attempts.
 
 ## Highlights
 
-- Fast local validation with no network calls
-- No API keys required
+- Fast local validation with no network calls by default
+- Optional LLM verification for safe-looking queries
+- Supports Groq, Gemini, OpenAI, and Azure OpenAI
+- No API keys required unless you enable optional LLM verification
 - MCP server built with the official Python MCP SDK
 - One structured MCP tool: `query_guard_validate`
 - Typed Pydantic request and response models
@@ -42,9 +44,7 @@ from query_guard import GuardRequest, QueryGuard
 async def main() -> None:
     guard = QueryGuard()
 
-    result = await guard.validate(
-        GuardRequest(user_query="how to make a bomb")
-    )
+    result = await guard.validate(GuardRequest(user_query="how to make a bomb"))
 
     print(result.model_dump(exclude_none=True))
 
@@ -73,6 +73,47 @@ Example output:
 from query_guard import GuardRequest
 
 request = GuardRequest(user_query="hello")
+```
+
+Optional LLM verification runs only when all required provider fields are supplied and the local rules first return `safe`:
+
+```python
+request = GuardRequest(
+    user_query="Please evaluate this nuanced instruction bundle.",
+    llm_provider="openai",
+    model_name="gpt-4o-mini",
+    api_key="sk-...",
+)
+```
+
+For Azure OpenAI, `model_name` is the deployment name:
+
+```python
+request = GuardRequest(
+    user_query="hello",
+    llm_provider="azure_openai",
+    model_name="my-deployment",
+    api_key="...",
+    azure_endpoint="https://my-resource.openai.azure.com",
+    azure_api_version="2024-10-21",
+)
+```
+
+If your Azure OpenAI gateway needs extra headers, pass them with `azure_headers`.
+These headers are used only for `llm_provider="azure_openai"`:
+
+```python
+request = GuardRequest(
+    user_query="hello",
+    llm_provider="azure_openai",
+    model_name="my-deployment",
+    api_key="...",
+    azure_endpoint="https://my-resource.openai.azure.com",
+    azure_headers={
+        "x-ms-client-request-id": "request-123",
+        "Ocp-Apim-Subscription-Key": "...",
+    },
+)
 ```
 
 ### `QueryGuard`
@@ -132,6 +173,34 @@ Tool input:
 }
 ```
 
+Optional LLM-backed input:
+
+```json
+{
+  "user_query": "Please evaluate this nuanced instruction bundle.",
+  "llm_provider": "gemini",
+  "model_name": "gemini-1.5-flash",
+  "api_key": "..."
+}
+```
+
+Azure OpenAI input with custom headers:
+
+```json
+{
+  "user_query": "hello",
+  "llm_provider": "azure_openai",
+  "model_name": "my-deployment",
+  "api_key": "...",
+  "azure_endpoint": "https://my-resource.openai.azure.com",
+  "azure_api_version": "2024-10-21",
+  "azure_headers": {
+    "x-ms-client-request-id": "request-123",
+    "Ocp-Apim-Subscription-Key": "..."
+  }
+}
+```
+
 Tool output:
 
 ```json
@@ -173,31 +242,70 @@ Add this server configuration to Claude Desktop or another compatible MCP client
 ```json
 {
   "mcpServers": {
-    "userqueryguard": {
+    "user-query-guard": {
       "command": "uv",
       "args": [
         "--directory",
-        "/absolute/path/to/user-query-guard",
+        "<path-to-user-query-guard>",
         "run",
         "python",
         "-m",
         "query_guard.server"
-      ]
+      ],
+      "env": {
+        "QUERY_GUARD_LLM_PROVIDER": "groq",
+        "QUERY_GUARD_MODEL_NAME": "llama-3.3-70b-versatile",
+        "QUERY_GUARD_API_KEY": "<provider-api-key>"
+      }
     }
   }
 }
 ```
 
-Replace `/absolute/path/to/user-query-guard` with your local repository path.
+Replace `<path-to-user-query-guard>` with your local repository path. Remove the `env`
+block if you want rules-only validation.
+
+For Azure OpenAI:
+
+```json
+{
+  "mcpServers": {
+    "user-query-guard": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "<path-to-user-query-guard>",
+        "run",
+        "python",
+        "-m",
+        "query_guard.server"
+      ],
+      "env": {
+        "QUERY_GUARD_LLM_PROVIDER": "azure_openai",
+        "QUERY_GUARD_MODEL_NAME": "<azure-deployment-name>",
+        "QUERY_GUARD_API_KEY": "<azure-openai-api-key>",
+        "QUERY_GUARD_AZURE_ENDPOINT": "https://<resource-name>.openai.azure.com",
+        "QUERY_GUARD_AZURE_API_VERSION": "2024-10-21",
+        "QUERY_GUARD_AZURE_HEADERS": "{\"x-ms-client-request-id\":\"claude-local\"}"
+      }
+    }
+  }
+}
+```
 
 If the package is installed globally in your environment, you can also run the console script:
 
 ```json
 {
   "mcpServers": {
-    "userqueryguard": {
+    "user-query-guard": {
       "command": "user-query-guard",
-      "args": []
+      "args": [],
+      "env": {
+        "QUERY_GUARD_LLM_PROVIDER": "openai",
+        "QUERY_GUARD_MODEL_NAME": "gpt-4o-mini",
+        "QUERY_GUARD_API_KEY": "<provider-api-key>"
+      }
     }
   }
 }
@@ -213,9 +321,14 @@ npx @modelcontextprotocol/inspector uv run python -m query_guard.server
 
 Open the URL printed by Inspector, connect to the server, and call `query_guard_validate`.
 
-## Rule-Based Policy
+If you are using a deployed URL such as Render, Inspector tests that deployed server,
+not your local working tree. Redeploy after code changes, or use a local stdio/HTTP command.
 
-User Query Guard uses a denylist-style local policy. Validation always runs locally and does not call an external LLM provider.
+## Validation Policy
+
+User Query Guard always starts with a denylist-style local policy. If the local rules block a query, the response is returned immediately and no external LLM provider is called.
+
+If no block rule matches, the query is treated as safe unless optional LLM settings are provided. When `llm_provider`, `model_name`, and `api_key` are present, the package sends only safe-looking queries to the selected LLM provider for a second validation pass. Azure OpenAI also requires `azure_endpoint`. `azure_headers` can be supplied for Azure-specific gateway headers.
 
 The query is marked invalid when it matches known unsafe patterns, including:
 
@@ -231,7 +344,7 @@ The query is marked invalid when it matches known unsafe patterns, including:
 - tool abuse attempts
 - data exfiltration attempts
 
-If no block rule matches, the query is treated as safe.
+If optional LLM validation fails because the provider is unavailable or returns an unexpected response, User Query Guard keeps the local rule result and includes the failure in the `reason`.
 
 ## Examples
 
@@ -302,8 +415,10 @@ Before publishing, verify that:
 
 ## Security Notes
 
-- User Query Guard does not require or accept API keys.
-- Validation is performed locally.
+- User Query Guard does not require API keys for local rule validation.
+- Optional LLM validation accepts API keys in `GuardRequest` or MCP tool input.
+- `azure_headers` may contain sensitive gateway credentials. Treat them like secrets.
+- Local block-rule validation is always performed before any optional network call.
 - The MCP server does not log user queries by default.
 - This project is a lightweight safety layer, not a complete security boundary.
 - Use it alongside application-level authorization, sandboxing, logging policies, and provider-side safety controls.

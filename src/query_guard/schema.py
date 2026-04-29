@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
+LLMProvider = Literal["groq", "gemini", "openai", "azure_openai"]
+
 GuardCategory = Literal[
     "safe",
     "prompt_injection",
@@ -24,7 +26,15 @@ GuardCategory = Literal[
 class GuardRequest(BaseModel):
     """Input accepted by query_guard_validate."""
 
+    model_config = ConfigDict(extra="forbid")
+
     user_query: str = Field(min_length=1)
+    llm_provider: LLMProvider | None = None
+    model_name: str | None = Field(default=None, min_length=1)
+    api_key: str | None = Field(default=None, min_length=1)
+    azure_endpoint: str | None = Field(default=None, min_length=1)
+    azure_api_version: str = Field(default="2024-02-15-preview", min_length=1)
+    azure_headers: dict[str, str] | None = None
 
 
 class GuardResponse(BaseModel):

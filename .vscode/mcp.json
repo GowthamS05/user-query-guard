@@ -1,0 +1,8 @@
+{
+    "servers": {
+        "USER-QUERY-GUARD": {
+            "type":"http",
+            "url": "https://user-query-guard.onrender.com/mcp"
+        }
+    }
+}
