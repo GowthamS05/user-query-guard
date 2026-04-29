@@ -44,7 +44,9 @@ class LLMValidator:
         payload, url, headers = self._build_request(user_query, config)
         raw_response = await asyncio.to_thread(self._post_json, url, headers, payload)
         content = self._extract_content(raw_response, config.provider)
-        return self._parse_guard_response(content)
+        response = self._parse_guard_response(content)
+        response.completion_endpoint_url = url
+        return response
 
     def _build_request(
         self, user_query: str, config: LLMConfig

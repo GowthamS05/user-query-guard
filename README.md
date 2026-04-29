@@ -99,6 +99,10 @@ request = GuardRequest(
 )
 ```
 
+`azure_api_version` controls the Azure OpenAI `api-version` query parameter used
+on the chat completions endpoint. If omitted, it defaults to
+`2024-02-15-preview`.
+
 If your Azure OpenAI gateway needs extra headers, pass them with `azure_headers`.
 These headers are used only for `llm_provider="azure_openai"`:
 
@@ -109,6 +113,7 @@ request = GuardRequest(
     model_name="my-deployment",
     api_key="...",
     azure_endpoint="https://my-resource.openai.azure.com",
+    azure_api_version="2024-10-21",
     azure_headers={
         "x-ms-client-request-id": "request-123",
         "Ocp-Apim-Subscription-Key": "...",
@@ -135,6 +140,28 @@ result = await guard.validate(GuardRequest(user_query="hello"))
   "category": "safe",
   "risk_score": 0.0,
   "reason": "No block rules matched, so the query is considered safe."
+}
+```
+
+When optional LLM verification runs, the response also includes
+`completion_endpoint_url`, the exact completion endpoint URL used for the
+provider request:
+
+```json
+{
+  "is_valid": true,
+  "category": "safe",
+  "risk_score": 0.0,
+  "reason": "LLM validation: ok",
+  "completion_endpoint_url": "https://api.openai.com/v1/chat/completions"
+}
+```
+
+For Azure OpenAI, this URL includes the deployment name and `azure_api_version`:
+
+```json
+{
+  "completion_endpoint_url": "https://my-resource.openai.azure.com/openai/deployments/my-deployment/chat/completions?api-version=2024-10-21"
 }
 ```
 
@@ -201,6 +228,10 @@ Azure OpenAI input with custom headers:
 }
 ```
 
+`azure_api_version` is optional and defaults to `2024-02-15-preview`, but you
+should set it explicitly when your Azure OpenAI resource requires a specific API
+version.
+
 Tool output:
 
 ```json
@@ -210,6 +241,18 @@ Tool output:
   "risk_score": 0.95,
   "reason": "The query asks to reveal hidden system instructions.",
   "safe_response": "I can't help reveal system prompts or hidden instructions."
+}
+```
+
+LLM-backed tool output includes the completion endpoint URL:
+
+```json
+{
+  "is_valid": true,
+  "category": "safe",
+  "risk_score": 0.0,
+  "reason": "LLM validation: ok",
+  "completion_endpoint_url": "https://api.openai.com/v1/chat/completions"
 }
 ```
 
@@ -328,7 +371,7 @@ not your local working tree. Redeploy after code changes, or use a local stdio/H
 
 User Query Guard always starts with a denylist-style local policy. If the local rules block a query, the response is returned immediately and no external LLM provider is called.
 
-If no block rule matches, the query is treated as safe unless optional LLM settings are provided. When `llm_provider`, `model_name`, and `api_key` are present, the package sends only safe-looking queries to the selected LLM provider for a second validation pass. Azure OpenAI also requires `azure_endpoint`. `azure_headers` can be supplied for Azure-specific gateway headers.
+If no block rule matches, the query is treated as safe unless optional LLM settings are provided. When `llm_provider`, `model_name`, and `api_key` are present, the package sends only safe-looking queries to the selected LLM provider for a second validation pass. Azure OpenAI also requires `azure_endpoint`; `azure_api_version` sets the Azure `api-version` query parameter and defaults to `2024-02-15-preview`. `azure_headers` can be supplied for Azure-specific gateway headers.
 
 The query is marked invalid when it matches known unsafe patterns, including:
 

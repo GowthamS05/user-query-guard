@@ -101,6 +101,39 @@ def test_azure_request_requires_endpoint() -> None:
         )
 
 
+@pytest.mark.asyncio
+async def test_validate_returns_completion_endpoint_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_post_json(
+        self: LLMValidator,
+        url: str,
+        headers: dict[str, str],
+        payload: dict[str, object],
+    ) -> dict[str, object]:
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": (
+                            '{"is_valid": true, "category": "safe", '
+                            '"risk_score": 0.0, "reason": "ok"}'
+                        )
+                    }
+                }
+            ]
+        }
+
+    monkeypatch.setattr(LLMValidator, "_post_json", fake_post_json)
+
+    result = await LLMValidator().validate(
+        "hello",
+        LLMConfig(provider="openai", model_name="gpt-4o-mini", api_key="secret"),
+    )
+
+    assert result.completion_endpoint_url == "https://api.openai.com/v1/chat/completions"
+
+
 def test_parse_invalid_llm_response_adds_safe_response() -> None:
     result = LLMValidator()._parse_guard_response(
         '{"is_valid": false, "category": "jailbreak", "risk_score": 0.9, "reason": "bypass"}'

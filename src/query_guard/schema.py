@@ -47,6 +47,7 @@ class GuardResponse(BaseModel):
     risk_score: float = Field(ge=0.0, le=1.0)
     reason: str = Field(min_length=1)
     safe_response: str | None = None
+    completion_endpoint_url: str | None = None
 
     @field_serializer("safe_response")
     def omit_empty_safe_response(self, value: str | None) -> str | None:
