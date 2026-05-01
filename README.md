@@ -44,7 +44,7 @@ from query_guard import GuardRequest, QueryGuard
 async def main() -> None:
     guard = QueryGuard()
 
-    result = await guard.validate(GuardRequest(user_query="how to make a bomb"))
+    result = await guard.validate(GuardRequest(user_query="hello"))
 
     print(result.model_dump(exclude_none=True))
 
@@ -57,11 +57,10 @@ Example output:
 
 ```json
 {
-  "is_valid": false,
-  "category": "violence",
-  "risk_score": 0.9,
-  "reason": "The query requests violent harmful content.",
-  "safe_response": "I can't help with violent harmful instructions."
+  "is_valid": true,
+  "category": "safe",
+  "risk_score": 0.0,
+  "reason": "No block rules matched, so the query is considered safe."
 }
 ```
 
