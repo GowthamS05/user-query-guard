@@ -1,0 +1,84 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, for example 0.1.7"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Confirm repository owner triggered the workflow
+        if: github.actor != github.repository_owner
+        run: |
+          echo "Only the repository owner can publish this package."
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked --dev
+
+      - name: Validate requested version
+        run: |
+          python - <<'PY'
+          import re
+          import sys
+
+          version = "${{ inputs.version }}"
+          pep440 = re.compile(
+              r"^[0-9]+(?:\.[0-9]+)*"
+              r"(?:(?:a|b|rc)[0-9]+)?"
+              r"(?:\.post[0-9]+)?"
+              r"(?:\.dev[0-9]+)?$"
+          )
+
+          if not pep440.fullmatch(version):
+              print(f"Invalid version: {version}", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+      - name: Update project version
+        run: uv version "${{ inputs.version }}"
+
+      - name: Update lockfile
+        run: uv lock
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Type check
+        run: uv run mypy
+
+      - name: Test
+        run: uv run pytest
+
+      - name: Build distribution
+        run: uv build
+
+      - name: Publish to PyPI
+        run: uv publish
