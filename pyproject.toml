@@ -1,6 +1,6 @@
 [project]
 name = "user-query-guard"
-version = "0.1.8"
+version = "0.1.9"
 description = "A safety gateway for validating user queries before they reach LLMs, agents, tools, or RAG pipelines."
 readme = "README.md"
 requires-python = ">=3.11"
