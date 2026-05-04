@@ -40,11 +40,33 @@ User Query Guard provides a local validation engine, optional LLM verification, 
 
 ## Visual Overview
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/GowthamS05/user-query-guard/main/assets/query-validation-flow.svg" alt="User Query Guard validation flow" width="100%" />
-</p>
+```text
+User Query
+    |
+    v
+Local Rule Validation
+    |
+    +-- Unsafe pattern found --> Blocked GuardResponse
+    |
+    +-- Safe-looking query
+            |
+            v
+    Optional LLM Verification
+            |
+            v
+Structured GuardResponse
+            |
+            v
+LLM App / Agent / Tool / RAG Pipeline
+```
 
-User query -> local rule validation -> optional LLM verification -> structured `GuardResponse` -> LLM app, agent, tool, or RAG pipeline.
+| Step | What happens |
+| --- | --- |
+| User query | The raw user input enters the guard before reaching your AI workflow. |
+| Local rule validation | Fast local checks detect prompt injection, jailbreaks, system prompt extraction, XSS, SQL injection, and other unsafe patterns. |
+| Blocked response | Unsafe queries return a structured `GuardResponse` immediately without calling an external LLM. |
+| Optional LLM verification | Safe-looking queries can be sent to Groq, Gemini, OpenAI, or Azure OpenAI for a second validation pass. |
+| Final response | Your app receives a typed result with `is_valid`, `category`, `risk_score`, `reason`, and optional `safe_response`. |
 
 ## Highlights
 
