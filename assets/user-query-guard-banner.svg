@@ -1,0 +1,43 @@
+<svg width="1280" height="320" viewBox="0 0 1280 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">User Query Guard banner</title>
+  <desc id="desc">A gradient banner with a shield query logo and the User Query Guard project name.</desc>
+  <defs>
+    <linearGradient id="backgroundGradient" x1="0" y1="0" x2="1280" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="0.5" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+    <linearGradient id="shieldGradient" x1="108" y1="78" x2="224" y2="238" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DFF7F3"/>
+    </linearGradient>
+    <filter id="softShadow" x="66" y="44" width="218" height="232" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="10"/>
+      <feGaussianBlur stdDeviation="12"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.02 0 0 0 0 0.08 0 0 0 0 0.16 0 0 0 0.25 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="320" rx="32" fill="url(#backgroundGradient)"/>
+  <circle cx="1140" cy="46" r="150" fill="white" fill-opacity="0.08"/>
+  <circle cx="1056" cy="286" r="96" fill="white" fill-opacity="0.08"/>
+  <circle cx="54" cy="272" r="132" fill="#0F172A" fill-opacity="0.2"/>
+
+  <g filter="url(#softShadow)">
+    <rect x="84" y="60" width="168" height="168" rx="38" fill="white" fill-opacity="0.18"/>
+    <path d="M168 78L224 101V146C224 184.2 201 216.9 168 229C135 216.9 112 184.2 112 146V101L168 78Z" fill="url(#shieldGradient)"/>
+    <path d="M168 93L211 110.4V146C211 176 194.3 202.5 168 213.8C141.7 202.5 125 176 125 146V110.4L168 93Z" stroke="#2563EB" stroke-opacity="0.26" stroke-width="5"/>
+    <path d="M137 127C137 119.8 142.8 114 150 114H187C197 114 205 122 205 132V153C205 163 197 171 187 171H170L153 184V171H150C142.8 171 137 165.2 137 158V127Z" fill="#0F172A"/>
+    <path d="M152 136H180" stroke="white" stroke-width="6" stroke-linecap="round"/>
+    <path d="M152 152H168" stroke="white" stroke-width="6" stroke-linecap="round"/>
+    <path d="M173 151L182 160L200 138" stroke="#22C55E" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="304" y="143" fill="white" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="58" font-weight="800">User Query Guard</text>
+  <text x="307" y="190" fill="#E0F2FE" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="25" font-weight="500">Validate prompts before they reach LLMs, agents, tools, or RAG pipelines.</text>
+  <text x="308" y="230" fill="#CCFBF1" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="21" font-weight="600">Prompt Injection • Jailbreaks • XSS • SQL Injection • MCP Safety</text>
+</svg>

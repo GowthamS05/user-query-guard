@@ -1,0 +1,37 @@
+<svg width="220" height="220" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">User Query Guard logo</title>
+  <desc id="desc">A shield protecting a query bubble with a check mark.</desc>
+  <defs>
+    <linearGradient id="shieldGradient" x1="34" y1="18" x2="187" y2="203" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="0.52" stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+    <linearGradient id="bubbleGradient" x1="68" y1="67" x2="156" y2="153" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DFF7F3"/>
+    </linearGradient>
+    <filter id="shadow" x="18" y="12" width="184" height="198" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="10"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.02 0 0 0 0 0.08 0 0 0 0 0.16 0 0 0 0.22 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+    </filter>
+  </defs>
+
+  <rect width="220" height="220" rx="48" fill="#F8FAFC"/>
+  <g filter="url(#shadow)">
+    <path d="M110 24L174 50V102C174 145.7 147.7 183.1 110 197C72.3 183.1 46 145.7 46 102V50L110 24Z" fill="url(#shieldGradient)"/>
+    <path d="M110 39L160 59.4V102C160 137.5 140.1 168.5 110 181.8C79.9 168.5 60 137.5 60 102V59.4L110 39Z" stroke="white" stroke-opacity="0.48" stroke-width="6"/>
+  </g>
+
+  <path d="M72 84C72 75.2 79.2 68 88 68H134C146.2 68 156 77.8 156 90V116C156 128.2 146.2 138 134 138H111L91 154V138H88C79.2 138 72 130.8 72 122V84Z" fill="url(#bubbleGradient)"/>
+  <path d="M88 93H130" stroke="#0F172A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M88 113H112" stroke="#0F172A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M119 111L131 123L154 96" stroke="#16A34A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="154" cy="66" r="12" fill="#F97316"/>
+  <circle cx="66" cy="154" r="9" fill="#7C3AED"/>
+</svg>

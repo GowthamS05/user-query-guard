@@ -1,8 +1,55 @@
+<p align="center">
+  <img src="./assets/user-query-guard-banner.svg" alt="User Query Guard banner" width="100%" />
+</p>
+
 # User Query Guard
 
-A lightweight Python safety gateway for validating user queries before they reach LLMs, agents, tools, or RAG pipelines.
+<p align="center">
+  <strong>A lightweight Python safety gateway for validating user queries before they reach LLMs, agents, tools, or RAG pipelines.</strong>
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/user-query-guard/"><img src="https://img.shields.io/pypi/v/user-query-guard?style=for-the-badge&logo=pypi&logoColor=white&color=2563eb" alt="PyPI version" /></a>
+  <a href="https://pypi.org/project/user-query-guard/"><img src="https://img.shields.io/pypi/pyversions/user-query-guard?style=for-the-badge&logo=python&logoColor=white&color=0f766e" alt="Supported Python versions" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/GowthamS05/user-query-guard?style=for-the-badge&color=16a34a" alt="MIT license" /></a>
+  <a href="https://modelcontextprotocol.io/"><img src="https://img.shields.io/badge/MCP-Compatible-7c3aed?style=for-the-badge" alt="MCP compatible" /></a>
+  <a href="https://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/Built%20with-uv-111827?style=for-the-badge" alt="Built with uv" /></a>
+</p>
+
+<p align="center">
+  <a href="https://docs.pydantic.dev/"><img src="https://img.shields.io/badge/Pydantic-v2-e92063?style=flat-square" alt="Pydantic v2" /></a>
+  <a href="#python-api"><img src="https://img.shields.io/badge/Async-Python%20API-0891b2?style=flat-square" alt="Async Python API" /></a>
+  <a href="#validation-policy"><img src="https://img.shields.io/badge/Rules--First-Local%20Validation-f97316?style=flat-square" alt="Rules-first local validation" /></a>
+  <a href="#validation-policy"><img src="https://img.shields.io/badge/LLM%20Verification-Optional-9333ea?style=flat-square" alt="Optional LLM verification" /></a>
+  <a href="src/query_guard/py.typed"><img src="https://img.shields.io/badge/Typed-py.typed-334155?style=flat-square" alt="Typed package" /></a>
+</p>
+
+<p align="center">
+  <a href="#installation">Installation</a> -
+  <a href="#quick-start">Quick Start</a> -
+  <a href="#mcp-server">MCP Server</a> -
+  <a href="#examples">Examples</a> -
+  <a href="#security-notes">Security</a>
+</p>
 
 User Query Guard provides a local validation engine, optional LLM verification, and a Model Context Protocol server. It is designed for projects that need fast checks for common unsafe query patterns such as prompt injection, jailbreak attempts, system prompt extraction, XSS payloads, SQL injection strings, harmful requests, and LLM poisoning attempts.
+
+## Tags
+
+`python` `mcp` `model-context-protocol` `llm-security` `ai-safety` `guardrails` `prompt-injection` `jailbreak-detection` `rag` `agents` `pydantic` `uv`
+
+## Visual Overview
+
+```mermaid
+flowchart LR
+    A[User query] --> B[Local rule validation]
+    B -->|unsafe pattern found| C[Blocked response]
+    B -->|safe-looking query| D{Optional LLM verification}
+    D -->|disabled| E[Valid query]
+    D -->|enabled| F[Groq / Gemini / OpenAI / Azure OpenAI]
+    F --> G[Structured GuardResponse]
+    G --> H[LLM app / Agent / Tool / RAG pipeline]
+```
 
 ## Highlights
 
