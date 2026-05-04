@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/user-query-guard-banner.svg" alt="User Query Guard banner" width="100%" />
+  <img src="https://raw.githubusercontent.com/GowthamS05/user-query-guard/main/assets/user-query-guard-banner.svg" alt="User Query Guard banner" width="100%" />
 </p>
 
 # User Query Guard
@@ -40,16 +40,11 @@ User Query Guard provides a local validation engine, optional LLM verification, 
 
 ## Visual Overview
 
-```mermaid
-flowchart LR
-    A[User query] --> B[Local rule validation]
-    B -->|unsafe pattern found| C[Blocked response]
-    B -->|safe-looking query| D{Optional LLM verification}
-    D -->|disabled| E[Valid query]
-    D -->|enabled| F[Groq / Gemini / OpenAI / Azure OpenAI]
-    F --> G[Structured GuardResponse]
-    G --> H[LLM app / Agent / Tool / RAG pipeline]
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/GowthamS05/user-query-guard/main/assets/query-validation-flow.svg" alt="User Query Guard validation flow" width="100%" />
+</p>
+
+User query -> local rule validation -> optional LLM verification -> structured `GuardResponse` -> LLM app, agent, tool, or RAG pipeline.
 
 ## Highlights
 
